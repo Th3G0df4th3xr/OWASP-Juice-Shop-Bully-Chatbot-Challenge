@@ -1,35 +1,30 @@
-🛠️ Source-Code-Hack
-📚 Overview
-This method leverages access to the source code of the OWASP Juice Shop (or deployed instance) to statically analyze how and where the Privacy Policy page or endpoint is triggered. The goal is to reverse-engineer the logic and discover hidden routes, unused components, or disabled links that are still reachable.
+🧠 Source-Code-Hack
+📂 Read between the lines – sometimes the source code spills the truth.
 
-⚔️ What We’re Doing
-By reviewing the app’s backend and frontend source code, we uncover the following:
+🧩 Overview
+This method involves exploring the frontend Angular code and Node.js backend routing to uncover hidden functionality. The goal is to find the exact route to the Privacy Policy page, which may exist but is intentionally hidden or unlinked in the UI.
 
-🔍 Frontend Clues (Angular)
-Locate the routing config: src/app/app-routing.module.ts
+🧠 Backend Insight
+Juice Shop's server-side code is typically in routes/index.js or similar files.
 
-Identify if there’s a hidden route like /privacy-policy that isn’t rendered in the UI
+Routes like /privacy-policy may exist but are not exposed to users via the interface.
 
-Check for conditionally hidden UI elements:
-e.g.,
+Look for res.sendFile(...), res.render(...), or app.get(...) methods that serve static pages or HTML.
 
-ts
-Copy
-Edit
-*ngIf="!privacyPolicyHidden"
-🔍 Backend Clues (Node.js)
-Inspect routes/index.js or similar backend router files
+🎯 Frontend Exploration
+Check app-routing.module.ts to see if a route like /privacy-policy exists.
 
-Search for res.render() or res.sendFile() that serves a privacy-policy page or static asset
+Look for components or links that are wrapped in conditions (*ngIf, routerLink, or hidden HTML).
 
-Look for flags, feature toggles, or unused endpoints
+It might be registered but not linked anywhere in the UI.
 
-🧠 Why This Works
-Applications often have disabled UI links but still keep backend routes alive for legacy, testing, or feature toggling. By studying the source, we eliminate guesswork and directly access hidden paths.
+🚀 Goal
+Identify and manually visit the hidden route (e.g., /#/privacy-policy) to trigger the challenge and verify it through the toast message, DevTools console, or network logs.
 
-✅ Success Criteria
-You locate and access the Privacy Policy via its hidden route or template render logic
+📁 Files of Interest
+/src/app/app-routing.module.ts
 
-A toast or confirmation appears in the app UI
+/src/app/components/*
 
-You gain deeper understanding of client-server code split and hidden logic
+/routes/*.js
+
