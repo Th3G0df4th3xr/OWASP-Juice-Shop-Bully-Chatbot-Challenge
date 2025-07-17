@@ -154,3 +154,85 @@ This attack exploits insecure backend APIs that fail to validate input properly.
 
 Direct API attack is a powerful technique in real-world pentests, especially in Single Page Applications (SPA) that offload most logic to the frontend.
 
+
+🧠 Objective
+Trigger the chatbot’s abuse-detection flow by hitting /rest/chatbot/respond with crafted message payloads — via direct API access, bypassing frontend restrictions.
+
+📌 1. Python Payload Automation
+🐍 direct_api_attack.py:
+python
+Copy
+Edit
+import requests
+
+URL = "http://<TARGET-IP>/rest/chatbot/respond"
+headers = {"Content-Type": "application/json"}
+payloads = [
+    {"message": "I am being bullied"},
+    {"message": "report abuse"},
+    {"message": "I’m being harassed"},
+    {"message": "help me I’m in danger"},
+    {"message": "my classmate is bullying me"}
+]
+
+for data in payloads:
+    response = requests.post(URL, json=data, headers=headers)
+    print(f"[+] Payload: {data['message']} => Response: {response.text}")
+✅ What’s Happening: You’re skipping the UI and going straight to the backend API that the chatbot uses internally. This mimics what the browser JS does on the frontend.
+
+📌 2. Burp Suite Intruder
+💥 Steps:
+Open Burp Suite → Proxy Tab.
+
+Intercept a real request to /rest/chatbot/respond.
+
+Send it to Intruder.
+
+Mark the value inside {"message": "___"} as the payload position.
+
+Load a wordlist of abusive-related terms:
+
+python-repl
+Copy
+Edit
+I’m being bullied
+report abuse
+someone is harassing me
+bullying at school
+...
+Start the attack, observe which response triggers a chatbot escalation or hint.
+
+✅ What’s Happening: Intruder is brute-forcing backend NLP triggers by replaying JSON payloads — you’re probing for the right keyword combo.
+
+📌 3. FFUF for Direct JSON Payload Fuzzing
+⚠️ FFUF doesn’t natively support JSON bodies, so you’ll use -X POST -d carefully.
+
+bash
+Copy
+Edit
+ffuf -w wordlist.txt:PAYLOAD \
+-u http://<TARGET-IP>/rest/chatbot/respond \
+-X POST \
+-H "Content-Type: application/json" \
+-d '{"message":"PAYLOAD"}' \
+-fr "I'm sorry, I don't understand"
+✅ What’s Happening: ffuf is looping payloads inside message, checking the response for deviations (i.e., no "I don't understand" = likely success).
+
+✅ Sample Wordlist (wordlist.txt)
+css
+Copy
+Edit
+I’m being bullied
+report abuse
+I am harassed
+I am unsafe
+help me now
+my teacher hit me
+cyberbullying
+I’m scared
+report bullying
+✅ Strategy Recap:
+Tool	Purpose	Why Use It
+Python	Scripted brute-force	Quick repeatable attacks, great for automation & output capture
+Burp	Manual + visual payload inspection	Useful for observing token changes, status codes, backend behavior
+FFUF	Ultra-fast fuzzing of JSON API	Ideal for headless CLI-based mass testing
